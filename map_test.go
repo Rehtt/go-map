@@ -1,23 +1,19 @@
 package go_map
 
 import (
-	"fmt"
+	"strconv"
 	"testing"
 )
 
-func TestMap(t *testing.T) {
+func BenchmarkMap(b *testing.B) {
 	m := New()
-	m.Set("test1", 1)
-	m.Set("test2", "2")
-	m.Set("test3", true)
-
-	fmt.Println(m.Pull2List())
-	fmt.Println(m.Pull2Map())
-
-	fmt.Println(m.Get("test2"))
-
-	m.Delete("test2")
-
-	fmt.Println(m.Pull2List())
-	fmt.Println(m.Pull2Map())
+	for i := 0; i < 1000000; i++ {
+		m.Set(strconv.Itoa(i), i)
+	}
+	for i := 0; i < 1000000; i++ {
+		m.Get(strconv.Itoa(i))
+	}
+	for i := 0; i < 1000000; i++ {
+		m.Delete(strconv.Itoa(i))
+	}
 }

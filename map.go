@@ -1,66 +1,53 @@
 package go_map
 
-import "container/list"
-
 type Map struct {
-	l *list.List
+	m     map[string]interface{}
+	l     []string
+	index int
 }
 
 func New() *Map {
-	return &Map{list.New()}
+	return &Map{map[string]interface{}{}, []string{}, 0}
 }
 func (m *Map) Set(key string, value interface{}) {
-	if _, ok, e := m.Get(key); !ok {
-		m.l.PushBack([]interface{}{key, value})
-	} else {
-		e.Value = []interface{}{key, value}
+	if _, ok := m.m[key]; !ok {
+		m.l = append(m.l, key)
+		m.index++
 	}
+	m.m[key] = value
+
 }
-func (m *Map) Get(key string) (d interface{}, b bool, l *list.Element) {
-	m.traverse(func(data []interface{}, e *list.Element) (exit bool) {
-		if data[0].(string) == key {
-			d = data[1]
-			b = true
-			l = e
-			return true
+func (m *Map) Get(key string) (interface{}, bool) {
+	v, b := m.m[key]
+	return v, b
+}
+func (m *Map) Delete(key string) {
+	delete(m.m, key)
+	for i, k := range m.l {
+		if k == key {
+			if i == 0 {
+				m.l = m.l[1:]
+			} else if i == len(m.l)-1 {
+				m.l = m.l[:i]
+			} else {
+				m.l = append(m.l[:i], m.l[i+1:]...)
+			}
 		}
-		return
-	})
-	return nil, false, nil
-}
-func (m *Map) Delete(key string) bool {
-	if _, ok, e := m.Get(key); ok {
-		m.l.Remove(e)
-		return true
 	}
-	return false
+	m.index--
 }
 func (m *Map) Pull2Map() map[string]interface{} {
-	out := make(map[string]interface{})
-	m.traverse(func(data []interface{}, e *list.Element) (exit bool) {
-		out[data[0].(string)] = data[1]
-		return
-	})
-	return out
+	return m.m
 }
 func (m *Map) Pull2List() ([]string, []interface{}) {
-	keys := make([]string, 0, m.l.Len())
-	values := make([]interface{}, 0, m.l.Len())
-	m.traverse(func(data []interface{}, e *list.Element) (exit bool) {
-		keys = append(keys, data[0].(string))
-		values = append(values, data[1])
-		return
-	})
-
+	keys := make([]string, 0, m.Len())
+	values := make([]interface{}, 0, m.Len())
+	for _, k := range m.l {
+		keys = append(keys, k)
+		values = append(values, m.m[k])
+	}
 	return keys, values
 }
-
-func (m *Map) traverse(f func(data []interface{}, e *list.Element) (exit bool)) {
-	var data []interface{}
-	for e := m.l.Front(); e != nil; e = e.Next() {
-		data = e.Value.([]interface{})
-		if exit := f(data, e); exit {
-			return
-		}
-	}
+func (m *Map) Len() int {
+	return m.index
 }
